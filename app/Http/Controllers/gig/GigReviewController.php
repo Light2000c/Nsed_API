@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers\gig;
 
-use App\Http\Controllers\Controller;
 use App\Models\Gig;
+use App\Models\Order;
 use App\Models\GigReview;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 
 class GigReviewController extends Controller
 {
     public function index()
     {
-        $gig_reviews = GigReview::get();
+        $gig_reviews = GigReview::with("gig")->get();
 
         return $gig_reviews;
     }
@@ -21,7 +22,7 @@ class GigReviewController extends Controller
     {
         $validated = $request->validate([
             "gig_id" => "required|numeric",
-            "rating" => "required|numeric",
+            "rating" => "required|integer|min:1|max:5",
             "comment" => "required",
         ]);
 
@@ -29,31 +30,52 @@ class GigReviewController extends Controller
 
             $user = $request->user();
 
-            $gig = Gig::find($request->gig_id);
+            $buyer = $user->buyer;
+
+            if (!$buyer) {
+                return response()->json([
+                    "message" => "Unauthorized access to this request.",
+                ], 403);
+            }
+
+            $gig = Gig::with("seller")->find($request->gig_id);
 
             if (!$gig) {
                 return response()->json([
                     "message" => "No gig was found with id " . $request->gig_id,
-                ]);
+                ], 404);
             }
 
+
+            // Check if there's a successful order between the buyer and seller
+            if (!$gig->order()->where("buyer_id", $buyer->id)->exists()) {
+                return response()->json([
+                    "message" => "You don't have a history with the seller, so you can't add a review.",
+                ], 400);
+            }
+
+            if ($user->review()->where('gig_id', $request->gig_id)->exists()) {
+                return response()->json([
+                    "message" => "You have already reviewed this gig.",
+                ], 400);
+            }
 
             $gig_review = $user->review()->create($validated);
 
             if ($gig_review) {
                 return response()->json([
                     "message" => "Gig review has been successfully added",
-                    "gig_file" => $gig_review
-                ]);
+                    "gig_review" => $gig_review
+                ], 201);
             } else {
                 return response()->json([
-                    "message" => "Something went wrong, gig review was not succesfully added"
-                ]);
+                    "message" => "Something went wrong, gig review was not successfully added"
+                ], 500);
             }
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error ",
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.". $e->getMessage(),
+            ], 500);
         }
     }
 
@@ -62,19 +84,19 @@ class GigReviewController extends Controller
     {
         try {
 
-            $gig_review = GigReview::find($id);
+            $gig_review = GigReview::with("gig")->find($id);
 
             if (!$gig_review) {
                 return response()->json([
                     "message" => "No gig review found with id " . $id,
-                ]);
+                ], 404);
             }
 
             return $gig_review;
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error",
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
     }
 
@@ -82,20 +104,20 @@ class GigReviewController extends Controller
     public function update(Request $request, string $id)
     {
 
-        $rules =  [];
-
-        if ($request->has("rating")) {
-            $rules["rating"] = "required|numeric";
-        }
-
-        if ($request->has("comment")) {
-            $rules["comment"] = "required";
-        }
+        $rules =  [
+            "rating" => "sometimes|required|integer|min:1|max:5",
+            "comment" => "sometimes|required"
+        ];
 
         $validated = $request->validate($rules);
 
-        try {
+        if (empty($validated)) {
+            return response()->json([
+                "message" => "No data provided for update.",
+            ], 400);
+        }
 
+        try {
 
 
             $gig_review = GigReview::find($id);
@@ -103,21 +125,16 @@ class GigReviewController extends Controller
             if (!$gig_review) {
                 return response()->json([
                     "message" => "No gig review found with id " . $id,
-                ]);
+                ], 404);
             }
 
             $user = $request->user();
-            $seller = $request->user()->seller()->first();
 
-            //Add check if there's a successful order between the buyer and seller
 
-            $is_buyer = $gig_review->user()->is($user);
-            $is_seller = $seller ? $gig_review->gig()->seller()->is($user) : false;
-
-            if (!$is_buyer && !$is_seller) {
+            if (!$this->canModifyGigReview($gig_review, $user)) {
                 return response()->json([
                     "message" => "Invalid user making the request",
-                ], 400);
+                ], 403);
             }
 
             $updated = $gig_review->update($validated);
@@ -129,13 +146,13 @@ class GigReviewController extends Controller
                 ], 200);
             } else {
                 return response()->json([
-                    "message" => "Something went wrong, gig review was not successfully updated",
-                ]);
+                    "message" => "Gig review update processed but no fields were changed.",
+                ], 200);
             }
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error",
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
     }
 
@@ -149,16 +166,13 @@ class GigReviewController extends Controller
             if (!$gig_review) {
                 return response()->json([
                     "message" => "No gig review found with id " . $id,
-                ]);
+                ], 404);
             }
 
             $user = $request->user();
-            $seller = $request->user()->seller()->first();
+           
 
-            $is_buyer = $gig_review->user()->is($user);
-            $is_seller = $seller ? $gig_review->gig()->seller()->is($user) : false;
-
-            if (!$is_buyer && !$is_seller) {
+            if (!$this->canModifyGigReview($gig_review, $user)) {
                 return response()->json([
                     "message" => "Invalid user making the request",
                 ], 400);
@@ -173,13 +187,24 @@ class GigReviewController extends Controller
                 ], 200);
             } else {
                 return response()->json([
-                    "message" => "Something went wrong, gig review was not successfully deleted",
-                ]);
+                    "message" => "Gig review deletion failed. Please try again.",
+                ], 422);
             }
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error" . $e->getMessage(),
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
+    }
+
+
+    public function canModifyGigReview($gig_review, $user){
+
+        $seller = $user->seller()->first();
+
+        $is_buyer = $gig_review->user()->is($user);
+        $is_seller = $seller && $gig_review->gig->seller()->is($seller);
+
+        return !$is_buyer || !$is_seller;
     }
 }

@@ -24,13 +24,13 @@ class SellerController extends Controller
             if (!$seller) {
                 return response()->json([
                     "message" => "No seller was found with id " . $id,
-                ]);
+                ], 404);
             }
 
             return $seller;
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error " . $e->getMessage(),
+                "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
     }
@@ -41,9 +41,9 @@ class SellerController extends Controller
     {
 
         $validated = $request->validate([
-            "display_name" => "required",
-            "category" => "required",
-            "bio" => "required",
+            "display_name" => "required|string|max:255",
+            "category" => "required|string|max:255",
+            "bio" => "required|string|max:1000",
         ]);
 
 
@@ -51,12 +51,10 @@ class SellerController extends Controller
 
             $user = $request->user();
 
-            $existing_seller = Seller::where("user_id", $user->id)->first();
-
-            if ($existing_seller) {
+            if ($user->seller()->exists()) {
                 return response()->json([
-                    "message" => "User already have a seller account"
-                ]);
+                    "message" => "User already has a selling account"
+                ], 409);
             }
 
             $seller = $user->seller()->create($validated);
@@ -65,63 +63,65 @@ class SellerController extends Controller
                 return response()->json([
                     "message" => "Seller account successfully created",
                     "seller" => $seller
-                ], 200);
+                ], 201);
             } else {
                 return response()->json([
-                    "message" => "Somethig went wrong, seller account was not successfully created"
-                ], 200);
+                    "message" => "Something went wrong. Seller account could not be created."
+                ], 500);
             }
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error " . $e->getMessage(),
+                "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
     }
 
 
-    public function update(Request $request, string $id)
+
+    public function update(Request $request)
     {
 
         $validated = $request->validate([
-            "display_name" => "required",
-            "category" => "required",
-            "bio" => "required",
+            "display_name" => "sometimes|required",
+            "category" => "sometimes|required",
+            "bio" => "sometimes|required",
         ]);
 
+
+        if (empty($validated)) {
+            return response()->json([
+                "message" => "No data provided for update.",
+            ], 400);
+        }
 
         try {
 
             $user = $request->user();
 
-
-            $seller = Seller::find($id);
+            $seller = $user->seller;
 
             if (!$seller) {
                 return response()->json([
-                    "message" => "No seller was found with id " . $id,
-                ]);
-            }
-
-            if (!$seller->user()->is($user)) {
-                return response()->json([
-                    "message" => "Invalid user making the request",
-                ], 400);
+                    "message" => "No seller account found for the authenticated user",
+                ], 404);
             }
 
             $updated = $seller->update($validated);
 
+
             if ($updated) {
                 return response()->json([
-                    "message" => "Seller details has been successfuly updated",
+                    "message" => "Seller details have been successfuly updated",
+                    "seller" => $seller,
                 ], 200);
             } else {
                 return response()->json([
-                    "message" => "Seller details was not successfuly updated",
-                ]);
+                    "message" => "Seller details could not be updated. Please try again.",
+                ], 500);
             }
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error " . $e->getMessage(),
+                "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
     }

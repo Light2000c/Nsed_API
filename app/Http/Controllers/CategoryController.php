@@ -17,8 +17,8 @@ class CategoryController extends Controller
             return $categories;
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error"
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
     }
 
@@ -35,14 +35,14 @@ class CategoryController extends Controller
             if (!$category) {
                 return response()->json([
                     "message" => "No category was found with id " . $id,
-                ]);
+                ], 404);
             }
 
             return $category;
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error"
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
     }
 

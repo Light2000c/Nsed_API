@@ -51,4 +51,6 @@ class User extends Authenticatable
     public function review(){
       return $this->hasMany(GigReview::class);
     }
+
+    
 }

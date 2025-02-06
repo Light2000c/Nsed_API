@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\gig;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Gig;
 use Error;
 use Illuminate\Http\Request;
@@ -27,13 +28,20 @@ class GigController extends Controller
         ]);
 
         try {
+            $category = Category::find($validated["category_id"]);
+
+            if (!$category) {
+                return response()->json([
+                    "message" =>  "No category found with ID ". $validated["category_id"],
+                ], 404);
+            }
 
             $seller = $request->user()->seller()->first();
 
             if (!$seller) {
                 return response()->json([
-                    "message" => "User doesn't have a seller account yet"
-                ]);
+                    "message" =>  "User doesn't have a seller account yet. Please create one first."
+                ], 404);
             }
 
             $gig = $seller->gig()->create($validated);
@@ -42,16 +50,16 @@ class GigController extends Controller
                 return response()->json([
                     "message" => "Gig has been successfully created",
                     "gig" => $gig
-                ]);
+                ], 201);
             } else {
                 return response()->json([
                     "message" => "Something went wrong, gig was not succesfully created"
-                ]);
+                ], 500);
             }
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error",
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
     }
 
@@ -61,19 +69,19 @@ class GigController extends Controller
 
         try {
 
-            $gig = Gig::find($id);
+            $gig = Gig::with("package", "file", "review")->find($id);
 
             if (!$gig) {
                 return response()->json([
                     "message" => "No gig found with id " . $id,
-                ]);
+                ], 404);
             }
 
             return $gig;
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error",
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
     }
 
@@ -82,47 +90,40 @@ class GigController extends Controller
     public function update(Request $request, string $id)
     {
         $rules =  [
-            "title" => "required",
-            "description" => "required",
+            "title" => "sometimes|required",
+            "description" => "sometimes|required",
+            "status" => "sometimes|required|in:pending,completed,canceled",
+            "view_count" => "sometimes|required|numeric",
+            "order_count" => "sometimes|required|numeric",
+            "terms_of_service" => "sometimes|required",
         ];
-
-        if ($request->has("status")) {
-            $rules["status"] = "required|in:pending,completed,canceled";
-        }
-        if ($request->has("views_count")) {
-            $rules["status"] = "required|numeric";
-        }
-        if ($request->has("orders_count")) {
-            $rules["status"] = "required|numeric";
-        }
-        if ($request->has("terms_of_service")) {
-            $rules["status"] = "required";
-        }
 
         $validated = $request->validate($rules);
 
+        if (empty(array_filter($validated))) {
+            return response()->json([
+                "message" => "No data provided for update.",
+            ], 400);
+        }
+
+
         try {
-
-            $seller = $request->user()->seller()->first();
-
-            if (!$seller) {
-                return response()->json([
-                    "message" => "User doesn't have a seller account yet"
-                ]);
-            }
 
             $gig = Gig::find($id);
 
             if (!$gig) {
                 return response()->json([
-                    "message" => "No gig found with id " . $id,
-                ]);
+                    "message" => "No gig found with ID " . $id,
+                ], 404);
             }
 
-            if (!$gig->seller->is($seller)) {
+            $seller = $request->user()->seller()->first();
+
+
+            if (!$seller || !$gig->seller->is($seller)) {
                 return response()->json([
                     "message" => "Invalid user making the request",
-                ], 400);
+                ], 403);
             }
 
             $updated = $gig->update($validated);
@@ -134,12 +135,12 @@ class GigController extends Controller
             } else {
                 return response()->json([
                     "message" => "Something went wrong, gig was not successfully updated",
-                ]);
+                ], 500);
             }
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error",
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
     }
 
@@ -148,26 +149,21 @@ class GigController extends Controller
     {
         try {
 
-            $seller = $request->user()->seller()->first();
-
-            if (!$seller) {
-                return response()->json([
-                    "message" => "User doesn't have a seller account yet"
-                ]);
-            }
-
             $gig = Gig::find($id);
 
             if (!$gig) {
                 return response()->json([
-                    "message" => "No gig found with id " . $id,
-                ]);
+                    "message" => "No gig found with ID " . $id,
+                ], 404);
             }
 
-            if (!$gig->seller->is($seller)) {
+            $seller = $request->user()->seller()->first();
+
+
+            if (!$seller || !$gig->seller->is($seller)) {
                 return response()->json([
                     "message" => "Invalid user making the request",
-                ], 400);
+                ], 403);
             }
 
             $deleted = $gig->delete();
@@ -180,14 +176,15 @@ class GigController extends Controller
             } else {
                 return response()->json([
                     "message" => "Something went wrong, gig was not successfully deleted",
-                ]);
+                ], 500);
             }
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error" . $e->getMessage(),
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
     }
+
 
 
     public function search(string $keyword)
@@ -195,7 +192,7 @@ class GigController extends Controller
 
         try {
 
-            $gig = Gig::where("title", "LIKE", "%" . $keyword . "%")->get();
+            $gig = Gig::with("package", "file", "review")->where("title", "LIKE", "%" . $keyword . "%")->get();
 
             if (!$gig) {
                 return response()->json([
@@ -206,8 +203,8 @@ class GigController extends Controller
             return $gig;
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error",
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
     }
 }

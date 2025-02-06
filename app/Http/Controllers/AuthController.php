@@ -6,8 +6,8 @@ use App\Models\LoginCode;
 use App\Models\User;
 use App\Models\VerificationCode;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
@@ -48,6 +48,7 @@ class AuthController extends Controller
                     ], 400);
                 }
 
+                $user->tokens()->delete();
                 $token = $user->createToken("user_token")->plainTextToken;
 
                 return response()->json([
@@ -55,6 +56,14 @@ class AuthController extends Controller
                     "user" => $user,
                     "token" => $token
                 ]);
+                
+                // return response()->json([
+                //     "message" => "login_success",
+                //     "user" => $user,
+                //     "token" => $token
+                // ])->withCookie(
+                //     Cookie::make('auth_token', $token, 60, null, null, true, true, false, 'Lax')
+                // );
             }
 
             if ($request->auth_type === "code") {
@@ -68,6 +77,7 @@ class AuthController extends Controller
                 }
 
                 if ($user) {
+                    $user->tokens()->delete();
                     $token = $user->createToken("user_token")->plainTextToken;
 
                     return response()->json([
@@ -75,11 +85,19 @@ class AuthController extends Controller
                         "user" => $user,
                         "token" => $token
                     ]);
+
+                    // return response()->json([
+                    //     "message" => "login_success",
+                    //     "user" => $user,
+                    //     "token" => $token
+                    // ])->withCookie(
+                    //     Cookie::make('auth_token', $token, 60, null, null, true, true, false, 'Lax')
+                    // );
                 }
             }
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error",
+                "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
     }
@@ -121,7 +139,7 @@ class AuthController extends Controller
             }
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "An error occurred while processing your request. Please try again later."
+                "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
     }

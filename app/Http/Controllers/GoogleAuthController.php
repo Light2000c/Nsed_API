@@ -80,52 +80,9 @@ class GoogleAuthController extends Controller
             }
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "An error occurred while processing your request. Please try again later. " . $e->getMessage()
+                "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
     }
 }
 
-
-
-
-
-// $user = User::where("email", $request->email)->first();
-
-// if ($user) {
-
-//     if (!$user->google_id) {
-//         $user->update([
-//             'google_id' => $request->id,
-//         ]);
-//     }
-
-//     $token = $user->createToken("user_token")->plainTextToken;
-
-//     return response()->json([
-//         "message" => "login_success",
-//         "user" => $user,
-//         "token" => $token
-//     ]);
-// } else {
-
-//     $new_user = User::create([
-//         'name' => $request->name,
-//         'email' => $request->email,
-//         'google_id' => $request->id,
-//     ]);
-
-//     if ($new_user) {
-//         $token = $new_user->createToken("user_token")->plainTextToken;
-
-//         return response()->json([
-//             "message" => "login_success",
-//             "user" => $new_user,
-//             "token" => $token
-//         ]);
-//     } else {
-//         return response()->json([
-//             "message" => "Something went wrong while trying to sign in."
-//         ]);
-//     }
-// }

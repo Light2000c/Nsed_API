@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Order;
 use App\Models\Seller;
 use App\Models\GigFile;
 use App\Models\Category;
@@ -46,5 +47,9 @@ class Gig extends Model
 
     public function review() {
         return $this->hasMany(GigReview::class);
+    }
+
+    public function order() {
+        return $this->hasMany(Order::class);
     }
 }

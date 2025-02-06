@@ -63,8 +63,8 @@ class VerificationController extends Controller
             }
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "An error occurred while processing your request. Please try again later." . $e->getMessage()
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
     }
 
@@ -123,8 +123,8 @@ class VerificationController extends Controller
             }
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "An error occurred while processing your request. Please try again later.",
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
     }
 }

@@ -12,7 +12,7 @@ class GigPackageController extends Controller
 
     public function index()
     {
-        $gig_packages = GigPackage::get();
+        $gig_packages = GigPackage::with("gig")->get();
 
         return $gig_packages;
     }
@@ -24,28 +24,28 @@ class GigPackageController extends Controller
             "gig_id" => "required|numeric",
             "package_name" => "required|in:basic,premium,standard",
             "description" => "required",
-            "price" => "required",
-            "delivery_time" => "required",
-            "revision_limit" => "required",
+            "price" => "required|numeric",
+            "delivery_time" => "required|integer|min:1",
+            "revision_limit" => "required|integer|min:0",
         ]);
 
         try {
 
-            $gig = Gig::find($request->gig_id);
+            $gig = Gig::with("seller")->find($request->gig_id);
 
             if (!$gig) {
                 return response()->json([
-                    "message" => "No gig was found with id " . $request->gig_id,
-                ]);
+                    "message" => "No gig was found with ID " . $request->gig_id,
+                ], 404);
             }
 
             $seller = $request->user()->seller()->first();
 
 
-            if (!$seller && !$gig->seller()->is($seller)) {
+            if (!$seller || !$gig->seller()->is($seller)) {
                 return response()->json([
-                    "message" => "Invalid user making the request."
-                ]);
+                    "message" => "Unauthorized action. You do not own this gig"
+                ], 403);
             }
 
             $gig_package = $gig->package()->create($validated);
@@ -54,16 +54,16 @@ class GigPackageController extends Controller
                 return response()->json([
                     "message" => "Gig package has been successfully created",
                     "gig_package" => $gig_package
-                ]);
+                ], 201);
             } else {
                 return response()->json([
                     "message" => "Something went wrong, gig package was not succesfully created"
-                ]);
+                ], 500);
             }
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error ",
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
     }
 
@@ -72,19 +72,19 @@ class GigPackageController extends Controller
     {
         try {
 
-            $gig_package = GigPackage::find($id);
+            $gig_package = GigPackage::with("gig")->find($id);
 
             if (!$gig_package) {
                 return response()->json([
                     "message" => "No gig package found with id " . $id,
-                ]);
+                ], 404);
             }
 
             return $gig_package;
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error",
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
     }
 
@@ -93,45 +93,38 @@ class GigPackageController extends Controller
     {
 
         $rules =  [
-            "package_name" => "required|in:basic,premium,standard"
+            "package_name" => "sometimes|required|in:basic,premium,standard",
+            "description" => "sometimes|required",
+            "price" => "sometimes|required|numeric",
+            "delivery_time" => "sometimes|required|integer|min:1",
+            "revision_limit" => "sometimes|required|integer|min:0",
         ];
-
-        if ($request->has("description")) {
-            $rules["description"] = "required";
-        }
-
-        if ($request->has("price")) {
-            $rules["price"] = "required";
-        }
-
-        if ($request->has("delivery_time")) {
-            $rules["delivery_time"] = "required";
-        }
-
-        if ($request->has("revision_limit")) {
-            $rules["revision_limit"] = "required";
-        }
 
         $validated = $request->validate($rules);
 
-        try {
+        if (empty(array_filter($validated))) {
+            return response()->json([
+                "message" => "No data provided for update.",
+            ], 400);
+        }
 
+        try {
 
             $gig_package = GigPackage::find($id);
 
             if (!$gig_package) {
                 return response()->json([
                     "message" => "No gig package found with id " . $id,
-                ]);
+                ], 404);
             }
 
             $seller = $request->user()->seller()->first();
 
 
-            if (!$seller && !$gig_package->gig()->seller()->is($seller)) {
+            if (!$seller || !$gig_package->gig->seller()->is($seller)) {
                 return response()->json([
                     "message" => "Invalid user making the request",
-                ], 400);
+                ], 403);
             }
 
             $updated = $gig_package->update($validated);
@@ -139,16 +132,17 @@ class GigPackageController extends Controller
             if ($updated) {
                 return response()->json([
                     "message" => "Gig package has been successfully updated",
+                    "gig_package" => $gig_package
                 ], 200);
             } else {
                 return response()->json([
-                    "message" => "Something  went wrong, gig package was not successfully updated",
-                ]);
+                    "message" => "Gig package update processed but no fields were changed.",
+                ], 200);
             }
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error",
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
     }
 
@@ -162,16 +156,16 @@ class GigPackageController extends Controller
             if (!$gig_package) {
                 return response()->json([
                     "message" => "No gig package found with id " . $id,
-                ]);
+                ], 404);
             }
 
             $seller = $request->user()->seller()->first();
 
 
-            if (!$seller && !$gig_package->gig()->seller()->is($seller)) {
+            if (!$seller || !$gig_package->gig->seller()->is($seller)) {
                 return response()->json([
                     "message" => "Invalid user making the request",
-                ], 400);
+                ], 403);
             }
 
 
@@ -184,13 +178,13 @@ class GigPackageController extends Controller
                 ], 200);
             } else {
                 return response()->json([
-                    "message" => "Something went wrong, gig package was not successfully deleted",
-                ]);
+                    "message" => "Gig package deletion failed. Please try again.",
+                ], 422);
             }
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error" . $e->getMessage(),
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
     }
 }

@@ -11,7 +11,7 @@ class GigFileController extends Controller
 {
     public function index()
     {
-        $gig_files = GigFile::get();
+        $gig_files = GigFile::with("gig")->get();
 
         return $gig_files;
     }
@@ -21,26 +21,26 @@ class GigFileController extends Controller
     {
         $validated = $request->validate([
             "gig_id" => "required|numeric",
-            "media_url" => "required",
+            "media_url" => "required|url",
         ]);
 
         try {
 
-            $gig = Gig::find($request->gig_id);
+            $gig = Gig::with("seller")->find($request->gig_id);
 
             if (!$gig) {
                 return response()->json([
-                    "message" => "No gig was found with id " . $request->gig_id,
-                ]);
+                    "message" => "No gig was found with ID " . $request->gig_id,
+                ], 404);
             }
 
             $seller = $request->user()->seller()->first();
 
 
-            if (!$seller && !$gig->seller()->is($seller)) {
+            if (!$seller || !$gig->seller->is($seller)) {
                 return response()->json([
                     "message" => "Invalid user making the request."
-                ]);
+                ], 403);
             }
 
             $gig_file = $gig->file()->create($validated);
@@ -49,16 +49,16 @@ class GigFileController extends Controller
                 return response()->json([
                     "message" => "Gig file has been successfully added",
                     "gig_file" => $gig_file
-                ]);
+                ], 201);
             } else {
                 return response()->json([
                     "message" => "Something went wrong, gig file was not succesfully added"
-                ]);
+                ], 500);
             }
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error ",
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
     }
 
@@ -67,19 +67,19 @@ class GigFileController extends Controller
     {
         try {
 
-            $gig_file = GigFile::find($id);
+            $gig_file = GigFile::with("gig")->find($id);
 
             if (!$gig_file) {
                 return response()->json([
-                    "message" => "No gig file found with id " . $id,
-                ]);
+                    "message" => "No gig file found with ID " . $id,
+                ], 404);
             }
 
             return $gig_file;
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error",
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
     }
 
@@ -87,30 +87,34 @@ class GigFileController extends Controller
     public function update(Request $request, string $id)
     {
 
-        $rules =  [
-            "media_url" => "required"
-        ];
+        $validated = $request->validate([
+            "media_url" => "sometimes|required|url"
+        ]);
 
-        $validated = $request->validate($rules);
+        if (empty(array_filter($validated))) {
+            return response()->json([
+                "message" => "No data provided for update.",
+            ], 400);
+        }
+
 
         try {
-
 
             $gig_file = GigFile::find($id);
 
             if (!$gig_file) {
                 return response()->json([
-                    "message" => "No gig file found with id " . $id,
-                ]);
+                    "message" => "No gig file found with ID " . $id,
+                ], 404);
             }
 
             $seller = $request->user()->seller()->first();
 
 
-            if (!$seller && !$gig_file->gig()->seller()->is($seller)) {
+            if (!$seller || !$gig_file->gig->seller()->is($seller)) {
                 return response()->json([
                     "message" => "Invalid user making the request",
-                ], 400);
+                ], 403);
             }
 
             $updated = $gig_file->update($validated);
@@ -118,16 +122,17 @@ class GigFileController extends Controller
             if ($updated) {
                 return response()->json([
                     "message" => "Gig file has been successfully updated",
+                    "gig_file" => $gig_file
                 ], 200);
             } else {
                 return response()->json([
-                    "message" => "Something went wrong, gig file was not successfully updated",
-                ]);
+                    "message" => "Gig file update processed but no fields were changed.",
+                ], 200);
             }
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error",
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
     }
 
@@ -140,19 +145,18 @@ class GigFileController extends Controller
 
             if (!$gig_file) {
                 return response()->json([
-                    "message" => "No gig file found with id " . $id,
-                ]);
+                    "message" => "No gig file found with ID " . $id,
+                ], 404);
             }
 
             $seller = $request->user()->seller()->first();
 
 
-            if (!$seller && !$gig_file->gig()->seller()->is($seller)) {
+            if (!$seller || !$gig_file->gig->seller()->is($seller)) {
                 return response()->json([
                     "message" => "Invalid user making the request",
-                ], 400);
+                ], 403);
             }
-
 
             $deleted = $gig_file->delete();
 
@@ -163,13 +167,13 @@ class GigFileController extends Controller
                 ], 200);
             } else {
                 return response()->json([
-                    "message" => "Something went wrong, gig file was not successfully deleted",
-                ]);
+                    "message" => "Gig file deletion failed. Please try again.",
+                ], 422);
             }
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error" . $e->getMessage(),
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
     }
 }

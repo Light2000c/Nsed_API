@@ -18,35 +18,36 @@ class CategoryController extends Controller
             return $categories;
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error"
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
     }
 
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            "name" => "required",
-        ]);
+        $validated = $request->validate(
+            [
+                "name" => "required|unique:categories,name",
+            ],
+            [
+                "name.required" => "category name is required",
+                "name.unique" => "category name already exists"
+            ]
+        );
 
         try {
 
-            $created = Category::create($validated);
+            Category::create($validated);
 
-            if ($created) {
-                return response()->json([
-                    "message" => "Category has been successfuly created."
-                ]);
-            } else {
-                return response()->json([
-                    "message" => "Category was not successfuly created."
-                ]);
-            }
+
+            return response()->json([
+                "message" => "Category has been successfully created."
+            ], 201);
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error"
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
     }
 
@@ -59,15 +60,15 @@ class CategoryController extends Controller
 
             if (!$category) {
                 return response()->json([
-                    "message" => "No category was found with id " . $id,
-                ]);
+                    "message" => "No category was found with ID " . $id,
+                ], 404);
             }
 
             return $category;
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error"
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
     }
 
@@ -75,9 +76,21 @@ class CategoryController extends Controller
     public function update(Request $request, string $id)
     {
 
-        $validated = $request->validate([
-            "name" => "required",
-        ]);
+        $validated = $request->validate(
+            [
+                "name" => "sometimes|required|unique:categories,name",
+            ],
+            [
+                "name.required" => "The category name is required.",
+                "name.unique" => "This category name already exists.",
+            ]
+        );
+
+        if (empty($validated)) {
+            return response()->json([
+                "message" => "No data was provided to update the category."
+            ]);
+        }
 
         try {
 
@@ -85,60 +98,75 @@ class CategoryController extends Controller
 
             if (!$category) {
                 return response()->json([
-                    "message" => "No category was found with id " . $id
-                ]);
+                    "message" => "No category was found with ID " . $id
+                ], 404);
             }
 
-            $updated = $category->update($validated);
+            $category->update($validated);
 
-            if ($updated) {
+            if ($category->wasChanged()) {
                 return response()->json([
-                    "message" => "Category has been successfuly created."
-                ]);
+                    "message" => "Category has been successfully updated.",
+                    "category" => $category,
+                ], 200);
             } else {
                 return response()->json([
-                    "message" => "Category was not successfuly created."
-                ]);
+                    "message" => "No changes were made to the category.",
+                ], 200);
             }
-
-
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error"
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
     }
 
 
     public function destroy(string $id)
     {
-        try{
+        try {
 
             $category = Category::find($id);
 
             if (!$category) {
                 return response()->json([
-                    "message" => "No category was found with id " . $id
-                ]);
+                    "message" => "No category was found with ID " . $id
+                ], 404);
             }
 
             $deleted = $category->delete();
 
             if ($deleted) {
                 return response()->json([
-                    "message" => "Category has been successfuly deleted."
-                ]);
+                    "message" => "Category has been successfuly deleted.",
+                ], 200);
             } else {
                 return response()->json([
                     "message" => "Category was not successfuly deleted."
-                ]);
+                ], 422);
             }
-            
-
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
-                "message" => "Internal server error"
-            ]);
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
+        }
+    }
+
+    public function search(string $keyword)
+    {
+
+        try {
+            $categorys = Category::where("name", "%" . $keyword . "%")->get();
+
+            if (!$categorys) {
+                return response()->json([
+                    "message" => "Your search " . $keyword . " didn't return any result.",
+                ], 404);
+            }
+        } catch (\Exception) {
+            return response()->json([
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
         }
     }
 }
