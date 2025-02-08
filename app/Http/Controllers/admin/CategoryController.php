@@ -15,9 +15,13 @@ class CategoryController extends Controller
 
             $categories = Category::get();
 
-            return $categories;
+            return response()->json([
+                "status" => "success",
+                "categories" => $categories,
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -38,14 +42,16 @@ class CategoryController extends Controller
 
         try {
 
-            Category::create($validated);
-
+            $category =  Category::create($validated);
 
             return response()->json([
-                "message" => "Category has been successfully created."
+                "status" => "success",
+                "message" => "Category has been successfully created.",
+                "category" => $category,
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -60,13 +66,18 @@ class CategoryController extends Controller
 
             if (!$category) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No category was found with ID " . $id,
                 ], 404);
             }
 
-            return $category;
+            return response()->json([
+                "status" => "success",
+                "categories" => $category,
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -88,7 +99,8 @@ class CategoryController extends Controller
 
         if (empty($validated)) {
             return response()->json([
-                "message" => "No data was provided to update the category."
+                "status" => "failed",
+                "message" => "No data was provided to update the category.",
             ]);
         }
 
@@ -98,6 +110,7 @@ class CategoryController extends Controller
 
             if (!$category) {
                 return response()->json([
+                   "status" => "failed",
                     "message" => "No category was found with ID " . $id
                 ], 404);
             }
@@ -106,16 +119,19 @@ class CategoryController extends Controller
 
             if ($category->wasChanged()) {
                 return response()->json([
+                    "status" => "success",
                     "message" => "Category has been successfully updated.",
                     "category" => $category,
                 ], 200);
             } else {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No changes were made to the category.",
                 ], 200);
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -130,6 +146,7 @@ class CategoryController extends Controller
 
             if (!$category) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No category was found with ID " . $id
                 ], 404);
             }
@@ -138,15 +155,18 @@ class CategoryController extends Controller
 
             if ($deleted) {
                 return response()->json([
+                    "status" => "success",
                     "message" => "Category has been successfuly deleted.",
                 ], 200);
             } else {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Category was not successfuly deleted."
                 ], 422);
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -156,15 +176,22 @@ class CategoryController extends Controller
     {
 
         try {
-            $categorys = Category::where("name", "%" . $keyword . "%")->get();
-
-            if (!$categorys) {
+            $categories = Category::where("name", "like", "%" . $keyword . "%")->get();
+        
+            if ($categories->isEmpty()) {
                 return response()->json([
-                    "message" => "Your search " . $keyword . " didn't return any result.",
+                    "status" => "failed",
+                    "message" => "Your search for ". $keyword ." didn't return any results.",
                 ], 404);
             }
+        
+            return response()->json([
+                "status" => "success",
+                "categories" => $categories,
+            ], 200);
         } catch (\Exception) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }

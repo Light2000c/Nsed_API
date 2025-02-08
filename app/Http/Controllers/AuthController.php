@@ -51,10 +51,10 @@ class AuthController extends Controller
                 $user->tokens()->delete();
                 $token = $user->createToken("user_token")->plainTextToken;
 
+                $user["token"] = $token;
                 return response()->json([
                     "message" => "login_success",
                     "user" => $user,
-                    "token" => $token
                 ]);
                 
                 // return response()->json([
@@ -80,10 +80,11 @@ class AuthController extends Controller
                     $user->tokens()->delete();
                     $token = $user->createToken("user_token")->plainTextToken;
 
+                    $user["token"] = $token;
+                    
                     return response()->json([
                         "message" => "login_success",
                         "user" => $user,
-                        "token" => $token
                     ]);
 
                     // return response()->json([

@@ -7,6 +7,7 @@ use App\Http\Controllers\admin\UserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\buyer\BuyerController;
 use App\Http\Controllers\buyer\OrderController as BuyerOrderController;
+use App\Http\Controllers\CategoryController as ControllersCategoryController;
 use App\Http\Controllers\ConditionController;
 use App\Http\Controllers\gig\GigController;
 use App\Http\Controllers\gig\GigFileController;
@@ -65,6 +66,11 @@ Route::get("/gig/reviews/{id}", [GigReviewController::class, "show"]);
 Route::get("status", [ConditionController::class, "index"]);
 
 Route::group(["middleware" => "auth:sanctum"], function () {
+
+
+    Route::get("/categories", [ControllersCategoryController::class, "index"]);
+    Route::get("/categories/{id}", [ControllersCategoryController::class, "show"]);
+    Route::get("/categories/search/{keyword}", [ControllersCategoryController::class, "search"]);
 
     // Route::get("status", [ConditionController::class, "index"]);
     Route::post("status", [ConditionController::class, "store"]);
@@ -130,6 +136,7 @@ Route::group(["middleware" => ["auth:sanctum", "is_admin"], "prefix" => "admin"]
     Route::post("/categories", [CategoryController::class, "store"]);
     Route::put("/categories/{id}", [CategoryController::class, "update"]);
     Route::delete("/categories/{id}", [CategoryController::class, "destroy"]);
+    Route::get("/categories/search/{keyword}", [CategoryController::class, "search"]);
 
 
     //gigs

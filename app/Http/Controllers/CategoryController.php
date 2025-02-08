@@ -14,9 +14,13 @@ class CategoryController extends Controller
 
             $categories = Category::get();
 
-            return $categories;
+            return response()->json([
+                "status" => "success",
+                "categories" => $categories,
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -34,13 +38,18 @@ class CategoryController extends Controller
 
             if (!$category) {
                 return response()->json([
-                    "message" => "No category was found with id " . $id,
+                    "status" => "failed",
+                    "message" => "No category was found with ID " . $id,
                 ], 404);
             }
 
-            return $category;
+            return response()->json([
+                "status" => "success",
+                "categories" => $category,
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -55,5 +64,31 @@ class CategoryController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+
+    public function search(string $keyword)
+    {
+
+        try {
+            $categories = Category::where("name", "like", "%" . $keyword . "%")->get();
+
+            if ($categories->isEmpty()) {
+                return response()->json([
+                    "status" => "failed",
+                    "message" => "Your search for ". $keyword ." didn't return any results.",
+                ], 404);
+            }
+
+            return response()->json([
+                "status" => "success",
+                "categories" => $categories,
+            ], 200);
+        } catch (\Exception) {
+            return response()->json([
+                "status" => "failed",
+                "message" => "An unexpected error occurred. Please try again later.",
+            ], 500);
+        }
     }
 }
