@@ -24,6 +24,7 @@ class BuyerController extends Controller
 
             if (!$buyer) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No buyer was found with id " . $id,
                 ], 404);
             }
@@ -31,6 +32,7 @@ class BuyerController extends Controller
             return $buyer;
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -49,6 +51,7 @@ class BuyerController extends Controller
 
             if ($existing_buyer) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "User already has a buyer account"
                 ], 403);
             }
@@ -57,16 +60,19 @@ class BuyerController extends Controller
 
             if ($buyer) {
                 return response()->json([
+                    "status" => "success",
                     "message" => "Buyer account successfully created",
                     "buyer" => $buyer
                 ], 201);
             } else {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Something went wrong, buyer account was not successfully created"
                 ], 500);
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -83,6 +89,7 @@ class BuyerController extends Controller
 
         if (empty($validated)) {
             return response()->json([
+                "status" => "failed",
                 "message" => "No data provided for update.",
             ], 400);
         }
@@ -96,6 +103,7 @@ class BuyerController extends Controller
 
             if (!$buyer) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No buyer was found with ID " . $id,
                 ], 404);
             }
@@ -104,16 +112,19 @@ class BuyerController extends Controller
 
             if ($updated) {
                 return response()->json([
+                    "status" => "success",
                     "message" => "Buyer details have been successfully updated",
                     "buyer" => $buyer,
                 ], 200);
             } else {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No changes were made to the buyer details.",
                 ], 200);
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -130,6 +141,7 @@ class BuyerController extends Controller
 
             if (!$buyer) {
                 return response()->json([
+                    "status" => "failed",
                    "message" => "No buyer was found with ID: " . $id,
                 ], 404);
             }
@@ -139,15 +151,18 @@ class BuyerController extends Controller
 
             if ($deleted) {
                 return response()->json([
+                    "status" => "success",
                     "message" => "Buyer account has been successfully deleted",
                 ], 200);
             } else {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Buyer account was not successfully deleted",
                 ]);
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }

@@ -46,6 +46,7 @@ class GoogleAuthController extends Controller
 
 
                     return response()->json([
+                        "status" => "success",
                         "message" => "login_success",
                         "user" => $user,
                         "token" => $token
@@ -65,21 +66,27 @@ class GoogleAuthController extends Controller
                         $token = $new_user->createToken("user_token")->plainTextToken;
 
                         return response()->json([
+                            "status" => "success",
                             "message" => "login_success",
                             "user" => $user,
                             "token" => $token,
                         ], 200);
                     } else {
                         return response()->json([
+                            "status" => "failed",
                             "message" => "Something went wrong while trying to sign in."
                         ], 400);
                     }
                 }
             } else {
-                return response()->json(['messagee' => 'Invalid ID Token'], 400);
+                return response()->json([
+                    "status" => "failed",
+                    'messagee' => 'Invalid ID Token'
+                ], 400);
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }

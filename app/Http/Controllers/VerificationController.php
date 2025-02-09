@@ -35,6 +35,7 @@ class VerificationController extends Controller
                     Mail::to($request->email)->send(new VerificationCodeMail($details));
 
                     return response()->json([
+                        "status" => "success",
                         "message" => "success",
                     ]);
                 }
@@ -58,11 +59,13 @@ class VerificationController extends Controller
                 Mail::to($request->email)->send(new VerificationCodeMail($details));
 
                 return response()->json([
+                    "status" => "success",
                     "message" => "success",
                 ]);
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -95,6 +98,7 @@ class VerificationController extends Controller
                     Mail::to($request->email)->send(new VerificationCodeMail($details));
 
                     return response()->json([
+                        "status" => "success",
                         "message" => "success",
                     ]);
                 }
@@ -118,11 +122,13 @@ class VerificationController extends Controller
                 Mail::to($request->email)->send(new VerificationCodeMail($details));
 
                 return response()->json([
+                    "status" => "success",
                     "message" => "success",
                 ]);
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }

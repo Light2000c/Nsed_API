@@ -34,6 +34,7 @@ class AuthController extends Controller
 
             if (!$user) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "User with email " . $request->email . " doesn't exist",
                 ], 400);
             }
@@ -44,6 +45,7 @@ class AuthController extends Controller
 
                 if (!$password_match) {
                     return response()->json([
+                        "status" => "failed",
                         "message" => "Incorrect login credentials",
                     ], 400);
                 }
@@ -53,11 +55,13 @@ class AuthController extends Controller
 
                 $user["token"] = $token;
                 return response()->json([
+                    "status" => "success",
                     "message" => "login_success",
                     "user" => $user,
                 ]);
                 
                 // return response()->json([
+                    // "status" => "success",
                 //     "message" => "login_success",
                 //     "user" => $user,
                 //     "token" => $token
@@ -72,6 +76,7 @@ class AuthController extends Controller
 
                 if (!$VerificationCode || $VerificationCode->expires_at < now()) {
                     return response()->json([
+                        "status" => "failed",
                         "message" => "Invalid or expired verification code",
                     ], 400);
                 }
@@ -83,11 +88,13 @@ class AuthController extends Controller
                     $user["token"] = $token;
                     
                     return response()->json([
+                        "status" => "success",
                         "message" => "login_success",
                         "user" => $user,
                     ]);
 
                     // return response()->json([
+                        // "status" => "success",
                     //     "message" => "login_success",
                     //     "user" => $user,
                     //     "token" => $token
@@ -98,6 +105,7 @@ class AuthController extends Controller
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -123,6 +131,7 @@ class AuthController extends Controller
 
             if (!$VerificationCode || $VerificationCode->expires_at < now()) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Invalid or expired verification code",
                 ], 400);
             }
@@ -133,6 +142,7 @@ class AuthController extends Controller
                 $token = $user->createToken("user_token")->plainTextToken;
 
                 return response()->json([
+                    "status" => "success",
                     "message" => "login_success",
                     "user" => $user,
                     "token" => $token
@@ -140,6 +150,7 @@ class AuthController extends Controller
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -156,10 +167,12 @@ class AuthController extends Controller
             $user->tokens()->delete();
 
             return response()->json([
+                "status" => "success",
                 "message" => "logout_success",
             ]);
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An error occurred while processing your request. Please try again later."
             ], 500);
         }

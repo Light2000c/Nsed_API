@@ -27,6 +27,7 @@ class UserController extends Controller
 
             if (!$user) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No user was found with Id " . $id,
                 ], 404);
             }
@@ -34,6 +35,7 @@ class UserController extends Controller
             return response()->json($user, 200);
         } catch (\Exception) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -53,6 +55,7 @@ class UserController extends Controller
 
             if (!$user) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No user was found with ID " . $id,
                 ], 404);
             }
@@ -61,16 +64,19 @@ class UserController extends Controller
 
             if ($user->wasChanged()) {
                 return response()->json([
+                    "status" => "success",
                     "message" => "User has been successfully updated",
                 ], 200);
             } else {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Something went wrong, user was not successfully updated",
                     "user" => $user
                 ], 200);
             }
         } catch (\Exception) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -84,6 +90,7 @@ class UserController extends Controller
 
             if (!$user) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No user was found with ID " . $id,
                 ], 404);
             }
@@ -92,15 +99,18 @@ class UserController extends Controller
 
             if ($deleted) {
                 return response()->json([
+                    "status" => "success",
                     "message" => "User have been successfully deleted",
                 ], 200);
             } else {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Something went wrong, user was not successfully deleted",
                 ], 422);
             }
         } catch (\Exception) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }

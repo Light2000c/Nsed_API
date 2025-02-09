@@ -34,6 +34,7 @@ class GigReviewController extends Controller
 
             if (!$buyer) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Unauthorized access to this request.",
                 ], 403);
             }
@@ -42,6 +43,7 @@ class GigReviewController extends Controller
 
             if (!$gig) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No gig was found with id " . $request->gig_id,
                 ], 404);
             }
@@ -50,12 +52,14 @@ class GigReviewController extends Controller
             // Check if there's a successful order between the buyer and seller
             if (!$gig->order()->where("buyer_id", $buyer->id)->exists()) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "You don't have a history with the seller, so you can't add a review.",
                 ], 400);
             }
 
             if ($user->review()->where('gig_id', $request->gig_id)->exists()) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "You have already reviewed this gig.",
                 ], 400);
             }
@@ -64,16 +68,19 @@ class GigReviewController extends Controller
 
             if ($gig_review) {
                 return response()->json([
+                    "status" => "success",
                     "message" => "Gig review has been successfully added",
                     "gig_review" => $gig_review
                 ], 201);
             } else {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Something went wrong, gig review was not successfully added"
                 ], 500);
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.". $e->getMessage(),
             ], 500);
         }
@@ -88,6 +95,7 @@ class GigReviewController extends Controller
 
             if (!$gig_review) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No gig review found with id " . $id,
                 ], 404);
             }
@@ -95,6 +103,7 @@ class GigReviewController extends Controller
             return $gig_review;
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -113,6 +122,7 @@ class GigReviewController extends Controller
 
         if (empty($validated)) {
             return response()->json([
+                "status" => "failed",
                 "message" => "No data provided for update.",
             ], 400);
         }
@@ -124,6 +134,7 @@ class GigReviewController extends Controller
 
             if (!$gig_review) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No gig review found with id " . $id,
                 ], 404);
             }
@@ -133,6 +144,7 @@ class GigReviewController extends Controller
 
             if (!$this->canModifyGigReview($gig_review, $user)) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Invalid user making the request",
                 ], 403);
             }
@@ -142,15 +154,18 @@ class GigReviewController extends Controller
 
             if ($updated) {
                 return response()->json([
+                    "status" => "success",
                     "message" => "Gig review has been successfully updated",
                 ], 200);
             } else {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Gig review update processed but no fields were changed.",
                 ], 200);
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -165,6 +180,7 @@ class GigReviewController extends Controller
 
             if (!$gig_review) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No gig review found with id " . $id,
                 ], 404);
             }
@@ -174,6 +190,7 @@ class GigReviewController extends Controller
 
             if (!$this->canModifyGigReview($gig_review, $user)) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Invalid user making the request",
                 ], 400);
             }
@@ -183,15 +200,18 @@ class GigReviewController extends Controller
 
             if ($deleted) {
                 return response()->json([
+                    "status" => "success",
                     "message" => "Gig review has been successfully deleted",
                 ], 200);
             } else {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Gig review deletion failed. Please try again.",
                 ], 422);
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }

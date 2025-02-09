@@ -30,6 +30,7 @@ class GigFileController extends Controller
 
             if (!$gig) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No gig was found with ID " . $request->gig_id,
                 ], 404);
             }
@@ -39,6 +40,7 @@ class GigFileController extends Controller
 
             if (!$seller || !$gig->seller->is($seller)) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Invalid user making the request."
                 ], 403);
             }
@@ -47,16 +49,19 @@ class GigFileController extends Controller
 
             if ($gig_file) {
                 return response()->json([
+                    "status" => "success",
                     "message" => "Gig file has been successfully added",
                     "gig_file" => $gig_file
                 ], 201);
             } else {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Something went wrong, gig file was not succesfully added"
                 ], 500);
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -71,6 +76,7 @@ class GigFileController extends Controller
 
             if (!$gig_file) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No gig file found with ID " . $id,
                 ], 404);
             }
@@ -78,6 +84,7 @@ class GigFileController extends Controller
             return $gig_file;
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -93,6 +100,7 @@ class GigFileController extends Controller
 
         if (empty(array_filter($validated))) {
             return response()->json([
+                "status" => "failed",
                 "message" => "No data provided for update.",
             ], 400);
         }
@@ -104,6 +112,7 @@ class GigFileController extends Controller
 
             if (!$gig_file) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No gig file found with ID " . $id,
                 ], 404);
             }
@@ -113,6 +122,7 @@ class GigFileController extends Controller
 
             if (!$seller || !$gig_file->gig->seller()->is($seller)) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Invalid user making the request",
                 ], 403);
             }
@@ -121,16 +131,19 @@ class GigFileController extends Controller
 
             if ($updated) {
                 return response()->json([
+                    "status" => "success",
                     "message" => "Gig file has been successfully updated",
                     "gig_file" => $gig_file
                 ], 200);
             } else {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Gig file update processed but no fields were changed.",
                 ], 200);
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -145,6 +158,7 @@ class GigFileController extends Controller
 
             if (!$gig_file) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No gig file found with ID " . $id,
                 ], 404);
             }
@@ -154,6 +168,7 @@ class GigFileController extends Controller
 
             if (!$seller || !$gig_file->gig->seller()->is($seller)) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Invalid user making the request",
                 ], 403);
             }
@@ -163,15 +178,18 @@ class GigFileController extends Controller
 
             if ($deleted) {
                 return response()->json([
+                    "status" => "success",
                     "message" => "Gig file has been successfully deleted",
                 ], 200);
             } else {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Gig file deletion failed. Please try again.",
                 ], 422);
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }

@@ -35,6 +35,7 @@ class GigPackageController extends Controller
 
             if (!$gig) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No gig was found with ID " . $request->gig_id,
                 ], 404);
             }
@@ -44,6 +45,7 @@ class GigPackageController extends Controller
 
             if (!$seller || !$gig->seller()->is($seller)) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Unauthorized action. You do not own this gig"
                 ], 403);
             }
@@ -52,16 +54,19 @@ class GigPackageController extends Controller
 
             if ($gig_package) {
                 return response()->json([
+                    "status" => "success",
                     "message" => "Gig package has been successfully created",
                     "gig_package" => $gig_package
                 ], 201);
             } else {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Something went wrong, gig package was not succesfully created"
                 ], 500);
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -76,6 +81,7 @@ class GigPackageController extends Controller
 
             if (!$gig_package) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No gig package found with id " . $id,
                 ], 404);
             }
@@ -83,6 +89,7 @@ class GigPackageController extends Controller
             return $gig_package;
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -104,6 +111,7 @@ class GigPackageController extends Controller
 
         if (empty(array_filter($validated))) {
             return response()->json([
+                "status" => "failed",
                 "message" => "No data provided for update.",
             ], 400);
         }
@@ -114,6 +122,7 @@ class GigPackageController extends Controller
 
             if (!$gig_package) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No gig package found with id " . $id,
                 ], 404);
             }
@@ -123,6 +132,7 @@ class GigPackageController extends Controller
 
             if (!$seller || !$gig_package->gig->seller()->is($seller)) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Invalid user making the request",
                 ], 403);
             }
@@ -131,16 +141,19 @@ class GigPackageController extends Controller
 
             if ($updated) {
                 return response()->json([
+                    "status" => "success",
                     "message" => "Gig package has been successfully updated",
                     "gig_package" => $gig_package
                 ], 200);
             } else {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Gig package update processed but no fields were changed.",
                 ], 200);
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -155,6 +168,7 @@ class GigPackageController extends Controller
 
             if (!$gig_package) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No gig package found with id " . $id,
                 ], 404);
             }
@@ -164,6 +178,7 @@ class GigPackageController extends Controller
 
             if (!$seller || !$gig_package->gig->seller()->is($seller)) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Invalid user making the request",
                 ], 403);
             }
@@ -174,15 +189,18 @@ class GigPackageController extends Controller
 
             if ($deleted) {
                 return response()->json([
+                    "status" => "success",
                     "message" => "Gig package has been successfully deleted",
                 ], 200);
             } else {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Gig package deletion failed. Please try again.",
                 ], 422);
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }

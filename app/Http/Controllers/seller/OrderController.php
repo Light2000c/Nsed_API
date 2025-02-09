@@ -27,6 +27,7 @@ class OrderController extends Controller
 
             if (!$order) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No order was found with Id " . $id,
                 ], 404);
             }
@@ -34,6 +35,7 @@ class OrderController extends Controller
             return $order;
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -51,6 +53,7 @@ class OrderController extends Controller
 
         if (empty(array_filter($validated))) {
             return response()->json([
+                "status" => "failed",
                 "message" => "No data provided for update.",
             ], 400);
         }
@@ -60,6 +63,7 @@ class OrderController extends Controller
 
             if (!$order) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No order was found with ID " . $id,
                 ], 404);
             }
@@ -68,6 +72,7 @@ class OrderController extends Controller
 
             if (!$seller || !$order->seller()->is($seller)) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Unauthorized access to this order.",
                 ], 403);
             }
@@ -77,15 +82,18 @@ class OrderController extends Controller
 
             if ($updated) {
                 return response()->json([
+                    "status" => "success",
                     "message" => "Order has been successfully updated",
                 ], 200);
             } else {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No changes were made to the order.",
                 ], 200);
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }

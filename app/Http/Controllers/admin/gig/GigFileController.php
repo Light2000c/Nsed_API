@@ -30,15 +30,18 @@ class GigFileController extends Controller
 
             if (!$gigFile) {
                 return response()->json()->response([
+                    "status" => "failed",
                     "message" =>  "No gig file found with ID " . $id,
                 ]);
             }
 
             return response()->json([
+                "status" => "success",
                 "gig_file" => $gigFile
             ]);
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -54,6 +57,7 @@ class GigFileController extends Controller
 
         if (empty($validated)) {
             return response()->json([
+                "status" => "failed",
                 "message" => "No data provided for update.",
             ], 400);
         }
@@ -64,6 +68,7 @@ class GigFileController extends Controller
 
             if (!$gig_file) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No gig file found with ID " . $id,
                 ], 404);
             }
@@ -72,16 +77,19 @@ class GigFileController extends Controller
 
             if ($gig_file->wasChanged()) {
                 return response()->json([
+                    "status" => "success",
                     "message" => "Gig file has been successfully updated",
                     "gig_package" => $gig_file
                 ], 200);
             } else {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Gig file update processed but no fields were changed.",
                 ], 200);
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -96,6 +104,7 @@ class GigFileController extends Controller
 
             if (!$gig_file) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No gig file found with ID " . $id,
                 ], 404);
             }
@@ -104,15 +113,18 @@ class GigFileController extends Controller
 
             if ($deleted) {
                 return response()->json([
+                    "status" => "success",
                     "message" => "Gig file has been successfully deleted",
                 ], 200);
             } else {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Gig file deletion failed. Please try again.",
                 ], 422);
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }

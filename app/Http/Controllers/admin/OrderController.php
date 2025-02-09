@@ -28,6 +28,7 @@ class OrderController extends Controller
 
             if (!$order) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No order was found with ID " . $id,
                 ], 404);
             }
@@ -35,6 +36,7 @@ class OrderController extends Controller
             return response()->json($order, 200);
         } catch (\Exception) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -61,6 +63,7 @@ class OrderController extends Controller
 
             if (!$order) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No order was found with ID " . $id,
                 ], 404);
             }
@@ -69,16 +72,19 @@ class OrderController extends Controller
 
             if ($order->wasChanged()) {
                 return response()->json([
+                    "status" => "success",
                     "message" => "Order has been successfully updated",
                     "order" => $order,
                 ], 200);
             } else {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No changes were made to the order",
                 ], 200);
             }
         } catch (\Exception) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }

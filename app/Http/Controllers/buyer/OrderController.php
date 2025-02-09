@@ -42,6 +42,7 @@ class OrderController extends Controller
 
             if (!$buyer) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "you don't have a buyer account to complete this request"
                 ], 404);
             }
@@ -50,12 +51,14 @@ class OrderController extends Controller
 
             if (!$seller) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Gig doesn't belong to the seller."
                 ], 403);
             }
 
             if ($gig->seller()->is($user->seller)) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "User cannot order their own gig."
                 ], 400);
             }
@@ -66,16 +69,19 @@ class OrderController extends Controller
 
             if ($order) {
                 return response()->json([
+                    "status" => "success",
                     "message" => "Order has been successfully created",
                     "order" => $order
                 ], 201);
             } else {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Something went wrong, Order was not successfully created"
                 ], 500);
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -93,6 +99,7 @@ class OrderController extends Controller
 
             if (!$order) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No order was found with Id " . $id,
                 ], 404);
             }
@@ -100,6 +107,7 @@ class OrderController extends Controller
             return $order;
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -122,6 +130,7 @@ class OrderController extends Controller
 
         if (empty($validated)) {
             return response()->json([
+                "status" => "failed",
                 "message" => "No data provided for update.",
             ], 400);
         }
@@ -131,6 +140,7 @@ class OrderController extends Controller
 
             if (!$order) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No order was found with ID " . $id,
                 ], 404);
             }
@@ -139,6 +149,7 @@ class OrderController extends Controller
 
             if (!$buyer || !$order->buyer()->is($buyer)) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Unauthorized access to this order.",
                 ], 403);
             }
@@ -147,15 +158,18 @@ class OrderController extends Controller
 
             if ($updated) {
                 return response()->json([
+                    "success" => "failed",
                     "message" => "Order has been successfully updated",
                 ], 200);
             } else {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No changes were made to the order.",
                 ], 200);
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
@@ -170,6 +184,7 @@ class OrderController extends Controller
 
             if (!$order) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "No order was found with ID " . $id,
                 ], 404);
             }
@@ -178,6 +193,7 @@ class OrderController extends Controller
 
             if (!$buyer || !$order->buyer()->is($buyer)) {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Unauthorized access to this order.",
                 ], 403);
             }
@@ -186,15 +202,18 @@ class OrderController extends Controller
 
             if ($deleted) {
                 return response()->json([
+                    "status" => "success",
                     "message" => "Order has been successfully deleted",
                 ], 200);
             } else {
                 return response()->json([
+                    "status" => "failed",
                     "message" => "Order could not be deleted. Please try again later.",
                 ], 500);
             }
         } catch (\Exception $e) {
             return response()->json([
+                "status" => "failed",
                 "message" => "An unexpected error occurred. Please try again later.",
             ], 500);
         }
